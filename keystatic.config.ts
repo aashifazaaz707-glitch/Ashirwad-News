@@ -4,7 +4,7 @@ export default config({
   storage: process.env.NODE_ENV === 'production'
     ? {
         kind: 'github',
-        repo: 'asif/silly-mendeleev',
+        repo: 'aashifazaaz707-glitch/Ashirwad-News',
       }
     : {
         kind: 'local',
