@@ -11,6 +11,6 @@ export default defineConfig({
     tailwind({
       configFile: './tailwind.config.mjs',
     }),
-    keystatic()
-  ],
+    ...(process.env.SKIP_KEYSTATIC === 'true' ? [] : [keystatic()])
+  ].filter(Boolean),
 });
