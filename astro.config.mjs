@@ -3,6 +3,8 @@ import react from '@astrojs/react';
 import tailwind from '@astrojs/tailwind';
 import keystatic from '@keystatic/astro';
 
+const isProduction = process.env.NODE_ENV === 'production' || process.env.CF_PAGES === '1';
+
 // https://astro.build/config
 export default defineConfig({
   output: 'static',
@@ -11,6 +13,6 @@ export default defineConfig({
     tailwind({
       configFile: './tailwind.config.mjs',
     }),
-    ...(process.env.SKIP_KEYSTATIC === 'true' ? [] : [keystatic()])
+    ...(isProduction ? [] : [keystatic()])
   ].filter(Boolean),
 });
