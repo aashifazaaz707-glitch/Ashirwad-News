@@ -1,0 +1,368 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import NewsCard from '../components/NewsCard.astro';
+import { Image } from 'astro:assets';
+
+// Fetch all news items
+const allNews = await getCollection('news');
+
+// Sort by publishDate descending
+const sortedNews = allNews.sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf());
+
+// Filter breaking news for ticker
+const breakingNews = sortedNews.filter(item => item.data.isBreakingNews);
+
+// Feature post (most recent)
+const featuredPost = sortedNews[0];
+// Other posts excluding the featured post
+const remainingNews = sortedNews.slice(1);
+
+// Generate tab content datasets
+const trendingNews = sortedNews.slice(0, 5); // default active tab
+const latestNews = sortedNews.slice(0, 6);
+const popularNews = sortedNews.slice().reverse().slice(0, 5); // Simulating popular by reversing or offset
+
+// Popular Tags list
+const popularTags = [
+  'Ashirwad News',
+  'समस्तीपुर',
+  'मुसरीघरारी',
+  'Bihar News',
+  'ताजा खबर',
+  'राजनीति',
+  'मौसम',
+  'शिक्षा'
+];
+
+// Helper to get formatted date
+function getFormattedDate(dateVal: Date) {
+  return dateVal.toLocaleDateString('hi-IN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+---
+
+<Layout title="बिहार और देश-दुनिया की ताज़ा ख़बरें">
+  <Header />
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+    
+    <!-- 1. Top Tags Section: Horizontal rolling pill badges -->
+    <section aria-label="लोकप्रिय टैग">
+      <div class="flex items-center gap-3 bg-white border border-gray-100 p-2.5 rounded-xl shadow-sm overflow-hidden">
+        <span class="text-xs font-extrabold text-brand-red uppercase font-heading tracking-wider shrink-0 flex items-center gap-1 border-r border-gray-100 pr-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trending-up"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+          ट्रेंडिंग टैग्स
+        </span>
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 scroll-smooth">
+          {popularTags.map(tag => (
+            <a 
+              href={`/category/samastipur`} 
+              class="text-xs font-semibold text-gray-600 bg-gray-50 border border-gray-100 px-3 py-1 rounded-full whitespace-nowrap hover:bg-brand-red/5 hover:text-brand-red hover:border-brand-red/30 transition-all duration-200"
+            >
+              #{tag}
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Latest Post Ticker: High-contrast breaking news ticker -->
+    <section class="bg-brand-dark border border-gray-800 rounded-xl overflow-hidden shadow-md flex items-center h-10" aria-label="ताज़ा खबरें टिकर">
+      <div class="bg-brand-red text-white text-xs font-extrabold px-4 h-full flex items-center gap-1.5 shrink-0 z-10 shadow-lg font-heading tracking-wide uppercase relative">
+        <span class="w-2 h-2 bg-white rounded-full animate-ping"></span>
+        ब्रेकिंग न्यूज़
+      </div>
+      <div class="flex-1 overflow-hidden relative h-full flex items-center bg-brand-dark">
+        {breakingNews.length > 0 ? (
+          <div class="marquee-container flex items-center gap-12 text-sm font-bold text-white whitespace-nowrap">
+            {breakingNews.map(item => (
+              <a href={`/news/${item.slug}`} class="hover:text-brand-accent transition-colors flex items-center gap-2">
+                <span class="text-brand-accent">✦</span> {item.data.title}
+              </a>
+            ))}
+            {/* Duplicate for infinite marquee effect */}
+            {breakingNews.map(item => (
+              <a href={`/news/${item.slug}`} class="hover:text-brand-accent transition-colors flex items-center gap-2">
+                <span class="text-brand-accent">✦</span> {item.data.title}
+              </a>
+            ))}
+          </div>
+        ) : (
+          <div class="px-4 text-sm font-medium text-gray-400">
+            आशीर्वाद न्यूज़ पर आपका स्वागत है! ताज़ा और निष्पक्ष ख़बरों के लिए जुड़े रहें।
+          </div>
+        )}
+      </div>
+    </section>
+
+    <!-- 3. Grid Layout: Main Feed and Sidebar -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      
+      <!-- Left Column: Main News Section -->
+      <div class="lg:col-span-8 space-y-8">
+        
+        <!-- A. Featured Article Box (Show only if there's any article) -->
+        {featuredPost && (
+          <section class="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl hover:border-brand-red/10 transition-all duration-300">
+            <div class="relative aspect-[21/9] bg-gray-100 overflow-hidden group">
+              <!-- Category badge overlay -->
+              <span class="absolute top-4 left-4 z-10 bg-brand-red text-white text-[11px] font-bold px-3 py-1 rounded shadow-md uppercase tracking-wider font-heading">
+                {featuredPost.data.category === 'home' ? 'मुख्य पृष्ठ' : featuredPost.data.category}
+              </span>
+              <Image 
+                src={featuredPost.data.image || '/images/news-placeholder.jpg'} 
+                alt={featuredPost.data.title}
+                width={800}
+                height={350}
+                format="webp"
+                class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-700"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+              
+              <!-- Content overlay for modern premium vibe -->
+              <div class="absolute bottom-0 inset-x-0 p-6 text-white flex flex-col justify-end">
+                <div class="flex items-center gap-2 text-xs text-gray-300 font-semibold mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clock"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span>{getFormattedDate(featuredPost.data.publishDate)}</span>
+                </div>
+                <a href={`/news/${featuredPost.slug}`} class="group">
+                  <h2 class="text-xl sm:text-2xl md:text-3xl font-extrabold leading-tight text-white group-hover:text-brand-accent transition-colors font-sans">
+                    {featuredPost.data.title}
+                  </h2>
+                </a>
+              </div>
+            </div>
+          </section>
+        )}
+
+        <!-- B. Tabbed News Container -->
+        <section class="bg-white border border-gray-100 rounded-2xl p-4 sm:p-6 shadow-sm">
+          
+          <!-- Tab Navigation Switcher -->
+          <div class="flex border-b border-gray-100 mb-6">
+            <button 
+              id="tab-trending"
+              class="tab-btn flex-1 pb-3 text-sm sm:text-base font-bold text-brand-dark border-b-2 border-brand-red text-brand-red transition-all flex items-center justify-center gap-1.5"
+              data-target="trending-panel"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flame"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+              ट्रेंडिंग (Trending)
+            </button>
+            <button 
+              id="tab-latest"
+              class="tab-btn flex-1 pb-3 text-sm sm:text-base font-bold text-gray-500 border-b-2 border-transparent hover:text-brand-dark hover:border-gray-200 transition-all flex items-center justify-center gap-1.5"
+              data-target="latest-panel"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              ताजा (Latest)
+            </button>
+            <button 
+              id="tab-popular"
+              class="tab-btn flex-1 pb-3 text-sm sm:text-base font-bold text-gray-500 border-b-2 border-transparent hover:text-brand-dark hover:border-gray-200 transition-all flex items-center justify-center gap-1.5"
+              data-target="popular-panel"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-award"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+              लोकप्रिय (Popular)
+            </button>
+          </div>
+
+          <!-- Tab Panels -->
+          <div>
+            <!-- Panel 1: Trending (Default Active) -->
+            <div id="trending-panel" class="tab-panel grid grid-cols-1 md:grid-cols-2 gap-4">
+              {trendingNews.length > 0 ? (
+                trendingNews.map(item => (
+                  <NewsCard
+                    title={item.data.title}
+                    slug={item.slug}
+                    category={item.data.category}
+                    publishDate={item.data.publishDate}
+                    image={item.data.image}
+                  />
+                ))
+              ) : (
+                <div class="col-span-full py-8 text-center text-gray-400 text-sm">समाचार लोड हो रहे हैं...</div>
+              )}
+            </div>
+
+            <!-- Panel 2: Latest (Hidden) -->
+            <div id="latest-panel" class="tab-panel hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+              {latestNews.length > 0 ? (
+                latestNews.map(item => (
+                  <NewsCard
+                    title={item.data.title}
+                    slug={item.slug}
+                    category={item.data.category}
+                    publishDate={item.data.publishDate}
+                    image={item.data.image}
+                  />
+                ))
+              ) : (
+                <div class="col-span-full py-8 text-center text-gray-400 text-sm">समाचार लोड हो रहे हैं...</div>
+              )}
+            </div>
+
+            <!-- Panel 3: Popular (Hidden) -->
+            <div id="popular-panel" class="tab-panel hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+              {popularNews.length > 0 ? (
+                popularNews.map(item => (
+                  <NewsCard
+                    title={item.data.title}
+                    slug={item.slug}
+                    category={item.data.category}
+                    publishDate={item.data.publishDate}
+                    image={item.data.image}
+                  />
+                ))
+              ) : (
+                <div class="col-span-full py-8 text-center text-gray-400 text-sm">समाचार लोड हो रहे हैं...</div>
+              )}
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Right Column: Sidebar -->
+      <aside class="lg:col-span-4 space-y-6">
+        
+        <!-- widget 1: Social Media Hub -->
+        <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
+          <h3 class="text-lg font-bold font-heading text-brand-dark border-l-4 border-brand-red pl-2.5">
+            हमसे जुड़ें
+          </h3>
+          <div class="grid grid-cols-2 gap-3">
+            <a href="#" class="flex items-center gap-2 p-2.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-xs font-bold transition-all">
+              <svg class="w-5 h-5 shrink-0 text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>
+              <span>फेसबुक फ़ॉलो</span>
+            </a>
+            <a href="#" class="flex items-center gap-2 p-2.5 bg-red-50 hover:bg-red-100 text-red-800 rounded-lg text-xs font-bold transition-all">
+              <svg class="w-5 h-5 shrink-0 text-red-600" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.528 3.545 12 3.545 12 3.545s-7.528 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.022 0 12 0 12s0 3.978.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.86.508 9.388.508 9.388.508s7.528 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.978 24 12 24 12s0-3.978-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+              <span>यूट्यूब सदस्य</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- widget 2: Samastipur Local News Sidebar curated -->
+        <div class="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm space-y-4">
+          <h3 class="text-lg font-bold font-heading text-brand-dark border-l-4 border-brand-red pl-2.5 flex items-center justify-between">
+            <span>समस्तीपुर विशेष</span>
+            <a href="/category/samastipur" class="text-xs text-brand-red font-bold hover:underline">सभी देखें</a>
+          </h3>
+          <div class="space-y-3.5">
+            {sortedNews.filter(n => n.data.category === 'samastipur' || n.data.category === 'musrigharari').slice(0, 4).map(item => (
+              <a href={`/news/${item.slug}`} class="block group">
+                <div class="flex items-start gap-2.5">
+                  <span class="text-brand-red text-xs mt-1 font-bold">●</span>
+                  <div class="space-y-0.5">
+                    <h4 class="text-xs font-bold text-gray-800 leading-snug group-hover:text-brand-red line-clamp-2">
+                      {item.data.title}
+                    </h4>
+                    <span class="text-[9px] text-gray-400 block">{getFormattedDate(item.data.publishDate)}</span>
+                  </div>
+                </div>
+              </a>
+            ))}
+            {sortedNews.filter(n => n.data.category === 'samastipur' || n.data.category === 'musrigharari').length === 0 && (
+              <p class="text-xs text-gray-400 text-center py-2">इस श्रेणी में अभी कोई समाचार उपलब्ध नहीं है।</p>
+            )}
+          </div>
+        </div>
+
+        <!-- widget 3: Editorial Newsletter signup widget -->
+        <div class="bg-gradient-to-br from-brand-darkRed to-rose-950 text-white rounded-2xl p-6 shadow-sm space-y-4 relative overflow-hidden">
+          <div class="absolute right-0 bottom-0 opacity-10 translate-x-4 translate-y-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          </div>
+          <h3 class="text-lg font-bold font-heading text-white tracking-wide">
+            ई-समाचार पत्र (Newsletter)
+          </h3>
+          <p class="text-xs text-gray-300 leading-relaxed font-sans">
+            समस्तीपुर और बिहार की ताज़ा खबरें सीधे अपने इनबॉक्स में पाने के लिए हमारे समाचार पत्र के सदस्य बनें।
+          </p>
+          <div class="space-y-2 relative z-10">
+            <input 
+              type="email" 
+              placeholder="आपका ईमेल पता" 
+              class="w-full text-xs text-gray-800 px-3.5 py-2.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-brand-accent shadow-inner" 
+            />
+            <button class="w-full bg-brand-accent hover:bg-brand-red text-white text-xs font-bold py-2.5 rounded-lg shadow-md hover:shadow-lg transition-all">
+              सदस्य बनें
+            </button>
+          </div>
+        </div>
+
+      </aside>
+
+    </div>
+
+  </main>
+
+  <Footer />
+</Layout>
+
+<script>
+  // Tab Navigation functionality
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.tab-panel');
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Get target panel ID
+      const targetPanelId = tab.getAttribute('data-target');
+
+      // Update button active state styles
+      tabs.forEach(t => {
+        t.classList.remove('border-brand-red', 'text-brand-red');
+        t.classList.add('border-transparent', 'text-gray-500');
+      });
+      tab.classList.add('border-brand-red', 'text-brand-red');
+      tab.classList.remove('border-transparent', 'text-gray-500');
+
+      // Update panels visibility
+      panels.forEach(panel => {
+        if (panel.id === targetPanelId) {
+          panel.classList.remove('hidden');
+        } else {
+          panel.classList.add('hidden');
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  /* CSS Marquee Keyframes for Breaking News */
+  .marquee-container {
+    animation: marquee 35s linear infinite;
+    width: max-content;
+  }
+
+  .marquee-container:hover {
+    animation-play-state: paused;
+  }
+
+  @keyframes marquee {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
+    100% {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  /* Helper class to hide scrollbar but preserve scrolling functionality */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+</style>

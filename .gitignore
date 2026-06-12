@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Local tools
+.git-portable/
+
+# Build outputs
+dist/
+.astro/
+.keystatic/
+
+# OS metadata
+.DS_Store
+Thumbs.db

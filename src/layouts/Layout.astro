@@ -1,0 +1,85 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+}
+
+const { 
+  title, 
+  description = "आशीर्वाद न्यूज़ - निष्पक्ष पत्रकारिता का भरोसेमंद नाम। समस्तीपुर, बिहार और देश-दुनिया की ताज़ा ख़बरें।", 
+  image = "/images/default-share.jpg" 
+} = Astro.props;
+
+// Current year for copyright
+const currentYear = new Date().getFullYear();
+---
+
+<!doctype html>
+<html lang="hi" class="scroll-smooth bg-brand-lightBg text-brand-dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Primary Meta Tags -->
+    <title>{title} | आशीर्वाद न्यूज़</title>
+    <meta name="title" content={`${title} | आशीर्वाद न्यूज़`} />
+    <meta name="description" content={description} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={`${title} | आशीर्वाद न्यूज़`} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={image} />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content={`${title} | आशीर्वाद न्यूज़`} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content={image} />
+
+    <!-- Google Fonts for Devanagari and Latin Comfort -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link 
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@300;400;500;600;700;800&family=Rajdhani:wght@500;600;700&display=swap" 
+      rel="stylesheet" 
+    />
+  </head>
+  <body class="min-h-screen flex flex-col font-sans antialiased selection:bg-brand-red selection:text-white">
+    <!-- Main content slot -->
+    <slot />
+
+    <style is:global>
+      /* Smooth transitions for links and buttons */
+      a, button {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* Custom scrollbar for premium look */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d32f2f;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #7f1d1d;
+      }
+
+      /* Heading typography configuration */
+      h1, h2, h3, h4, h5, h6 {
+        font-family: 'Rajdhani', 'Noto Sans Devanagari', sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+    </style>
+  </body>
+</html>
